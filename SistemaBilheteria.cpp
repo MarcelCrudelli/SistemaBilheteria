@@ -1,0 +1,169 @@
+#include <iostream>
+#include <iomanip>
+#include <vector>
+using namespace std;
+
+// Constantes globais
+const int NUM_FILEIRAS = 15;
+const int POLTRONAS_POR_FILEIRA = 40;
+
+// Preços por categoria de fileira
+const float PRECO_A = 50.00;  // Fileiras 1-5
+const float PRECO_B = 30.00;  // Fileiras 6-10
+const float PRECO_C = 15.00;  // Fileiras 11-15
+
+// Tipo para representar o teatro (matriz de bool)
+typedef vector<vector<bool>> Teatro;
+
+// Protótipos das funções
+void inicializarTeatro(Teatro &teatro);
+void mostrarMenuPrincipal();
+void processarReserva(Teatro &teatro);
+void exibirMapaOcupacao(const Teatro &teatro);
+void mostrarFaturamento(const Teatro &teatro);
+bool validarEntrada(int valor, int minimo, int maximo);
+
+int main() {
+    Teatro teatro;
+    inicializarTeatro(teatro);
+    
+    int opcao;
+    
+    do {
+        mostrarMenuPrincipal();
+        cout << "Opcao: ";
+        cin >> opcao;
+        
+        switch(opcao) {
+            case 1:
+                processarReserva(teatro);
+                break;
+            case 2:
+                exibirMapaOcupacao(teatro);
+                break;
+            case 3:
+                mostrarFaturamento(teatro);
+                break;
+            case 0:
+                cout << "Encerrando sistema..." << endl;
+                break;
+            default:
+                cout << "Opcao invalida!" << endl;
+        }
+        
+    } while(opcao != 0);
+    
+    return 0;
+}
+
+// Inicializa todas as poltronas como disponíveis
+void inicializarTeatro(Teatro &teatro) {
+    teatro.resize(NUM_FILEIRAS);
+    for(int i = 0; i < NUM_FILEIRAS; i++) {
+        teatro[i].resize(POLTRONAS_POR_FILEIRA, false);
+    }
+}
+
+// Mostra o menu principal
+void mostrarMenuPrincipal() {
+    cout << "\n=== SISTEMA DE BILHETERIA ===" << endl;
+    cout << "1. Reservar poltrona" << endl;
+    cout << "2. Mapa de ocupacao" << endl;
+    cout << "3. Faturamento" << endl;
+    cout << "0. Sair" << endl;
+}
+
+// Processa a reserva de uma poltrona
+void processarReserva(Teatro &teatro) {
+    int fileira, poltrona;
+    
+    cout << "\n--- RESERVA DE POLTRONA ---" << endl;
+    
+    // Solicita e valida a fileira
+    do {
+        cout << "Fileira (1-" << NUM_FILEIRAS << "): ";
+        cin >> fileira;
+    } while(!validarEntrada(fileira, 1, NUM_FILEIRAS));
+    
+    // Solicita e valida a poltrona
+    do {
+        cout << "Poltrona (1-" << POLTRONAS_POR_FILEIRA << "): ";
+        cin >> poltrona;
+    } while(!validarEntrada(poltrona, 1, POLTRONAS_POR_FILEIRA));
+    
+    // Verifica disponibilidade
+    if(teatro[fileira-1][poltrona-1]) {
+        cout << "ERRO: Poltrona ja ocupada!" << endl;
+    } else {
+        teatro[fileira-1][poltrona-1] = true;
+        cout << "Reserva confirmada!" << endl;
+        
+        // Mostra o preço conforme a fileira
+        if(fileira <= 5) {
+            cout << "Valor: R$ " << fixed << setprecision(2) << PRECO_A << endl;
+        } else if(fileira <= 10) {
+            cout << "Valor: R$ " << fixed << setprecision(2) << PRECO_B << endl;
+        } else {
+            cout << "Valor: R$ " << fixed << setprecision(2) << PRECO_C << endl;
+        }
+    }
+}
+
+// Exibe o mapa visual da ocupação
+void exibirMapaOcupacao(const Teatro &teatro) {
+    cout << "\n--- MAPA DE OCUPACAO ---" << endl;
+    cout << "Legenda: . = vago  # = ocupado" << endl;
+    
+    // Cabeçalho com números das poltronas
+    cout << "     ";
+    for(int p = 1; p <= POLTRONAS_POR_FILEIRA; p++) {
+        cout << p%10; // Mostra apenas o último dígito para economizar espaço
+    }
+    cout << endl;
+    
+    // Mostra cada fileira com seu status
+    for(int f = 0; f < NUM_FILEIRAS; f++) {
+        cout << "F" << setw(2) << setfill('0') << (f+1) << ": "; // Formata F01, F02, etc.
+        
+        for(int p = 0; p < POLTRONAS_POR_FILEIRA; p++) {
+            cout << (teatro[f][p] ? '#' : '.');
+        }
+        cout << endl;
+    }
+}
+
+// Calcula e mostra o faturamento
+void mostrarFaturamento(const Teatro &teatro) {
+    int ocupadas = 0;
+    float total = 0.0;
+    
+    for(int f = 0; f < NUM_FILEIRAS; f++) {
+        for(int p = 0; p < POLTRONAS_POR_FILEIRA; p++) {
+            if(teatro[f][p]) {
+                ocupadas++;
+                
+                if(f < 5) {
+                    total += PRECO_A;
+                } else if(f < 10) {
+                    total += PRECO_B;
+                } else {
+                    total += PRECO_C;
+                }
+            }
+        }
+    }
+    
+    cout << "\n--- FATURAMENTO ---" << endl;
+    cout << "Lugares ocupados: " << ocupadas << "/" << (NUM_FILEIRAS * POLTRONAS_POR_FILEIRA) << endl;
+    cout << "Total arrecadado: R$ " << fixed << setprecision(2) << total << endl;
+    cout << "Ocupacao: " << (ocupadas * 100.0 / (NUM_FILEIRAS * POLTRONAS_POR_FILEIRA)) << "%" << endl;
+}
+
+// Valida se um valor está dentro de um intervalo
+bool validarEntrada(int valor, int minimo, int maximo) {
+    if(valor < minimo || valor > maximo) {
+        cout << "Valor invalido! Deve ser entre " << minimo << " e " << maximo << endl;
+        return false;
+    }
+    return true;
+}
